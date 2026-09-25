@@ -5,6 +5,7 @@ crispy-bootstrap5==2026.3
 django-jazzmin==3.0.4
 django-ratelimit==4.1.0
 google-generativeai>=0.8.0
+Pillow>=10.0.0
 
 # Production serving
 gunicorn>=23.0.0

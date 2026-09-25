@@ -170,7 +170,10 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [BASE_DIR / "static", BASE_DIR / "public"]
+_static_dirs = [BASE_DIR / "static"]
+if (BASE_DIR / "public").is_dir():
+    _static_dirs.append(BASE_DIR / "public")
+STATICFILES_DIRS = _static_dirs
 
 # WhiteNoise: serve collected static files directly from the app (no separate
 # webserver needed). Compressed manifest for long cache expiry.
