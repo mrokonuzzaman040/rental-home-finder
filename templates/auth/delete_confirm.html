@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %} - Delete {{ listing.title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="bg-white border p-5 shadow-sm text-center">
+            <i class="bi bi-exclamation-triangle text-danger display-4 mb-4 d-block"></i>
+            <h2 class="h4 fw-bold">Delete Property?</h2>
+            <p class="text-muted mb-4">Are you sure you want to remove <strong>{{ listing.title }}</strong>? This action cannot be undone.</p>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{% url 'dashboard' %}" class="btn btn-light rounded-0 px-4 border">Cancel</a>
+                    <button type="submit" class="btn btn-danger rounded-0 px-4">Yes, Delete Property</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% for property_listing in listings %}
+    <div class="col-md-6 col-xl-4 listing-item">
+        <div class="card card-classic h-100">
+            {% if property_listing.main_image %}
+                <img src="{{ property_listing.main_image.url }}" class="card-img-top" alt="{{ property_listing.title }}">
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Property">
+            {% endif %}
+            <div class="card-body">
+                <h3 class="card-title text-truncate" title="{{ property_listing.title }}">{{ property_listing.title }}</h3>
+                <p class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>{{ property_listing.city }}</p>
+                <p class="small mb-2"><span class="badge rounded-0 bg-light text-dark border">{{ property_listing.get_property_kind_display }}</span></p>
+                <div class="price-tag mb-3">৳{{ property_listing.sale_price }}</div>
+                <a href="{% url 'property_detail' property_listing.id %}" class="btn btn-classic w-100">Details</a>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted">No properties for sale yet.</p>
+    </div>
+{% endfor %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %} - Properties for Sale{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="rf-section-title mb-1">Property - Buy &amp; Sell</h2>
+            <p class="text-muted small mb-0">Browse properties listed for sale by verified owners.</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% include 'listings/_property_items.html' %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link rounded-0" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link rounded-0">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link rounded-0" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

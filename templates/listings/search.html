@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% block title %} - Search listings{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+    .rf-search-hero {
+        background: linear-gradient(135deg, rgba(6, 49, 31, 0.06) 0%, rgba(13, 110, 71, 0.08) 100%);
+        border-bottom: 1px solid rgba(6, 49, 31, 0.1);
+    }
+    .rf-city-chip {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.78rem;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        border-radius: 100px;
+        color: #444;
+        text-decoration: none;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .rf-city-chip:hover {
+        background: rgba(6, 49, 31, 0.07);
+        border-color: rgba(6, 49, 31, 0.35);
+        color: var(--deep-green);
+    }
+    .rf-map-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        min-height: 360px;
+    }
+    #rfSearchMap {
+        min-height: 360px;
+        background: #eef3f0;
+    }
+    .rf-map-city-list {
+        max-height: 360px;
+        overflow: auto;
+    }
+    .rf-map-pin {
+        width: 18px;
+        height: 18px;
+        border-radius: 50% 50% 50% 0;
+        background: var(--deep-green);
+        transform: rotate(-45deg);
+        border: 2px solid #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .rf-map-pin::after {
+        content: "";
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #fff;
+        top: 4px;
+        left: 4px;
+    }
+    @media (max-width: 767.98px) {
+        .rf-map-shell { grid-template-columns: 1fr; }
+        .rf-map-city-list { max-height: 180px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if visitor_city %}
+<div class="container-fluid px-0 rf-search-hero mb-0">
+    <div class="container py-3">
+        <div class="alert alert-light border rounded-0 small py-2 mb-0 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span><i class="bi bi-pin-map-fill text-success me-1"></i> Ordering with <strong>{{ visitor_city }}</strong> first - from your saved location preference.</span>
+            <a href="{% url 'listings' %}?clear_prefs=1" class="small link-secondary text-decoration-underline">Clear location preference</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container py-4">
+    <div class="rf-search-hero rounded-0 border px-4 py-4 mb-4 bg-white shadow-sm">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+            <div>
+                <h1 class="h4 fw-bold mb-1" style="font-family:'Playfair Display',serif;">Search listings</h1>
+                <p class="text-muted small mb-0">
+                    {% if listings.paginator.count %}
+                        {{ result_count }} propert{% if result_count != 1 %}ies{% else %}y{% endif %} match your criteria
+                        {% if active_filters %} - filters applied{% endif %}
+                    {% else %}
+                        No properties match yet - loosen filters or clear tenant fit.
+                    {% endif %}
+                </p>
+            </div>
+            <a href="{% url 'listings' %}" class="btn btn-outline-dark btn-sm rounded-0">Browse home</a>
+        </div>
+
+        <h2 class="h6 fw-bold mb-3"><i class="bi bi-funnel text-success me-2"></i>Filters</h2>
+        <form action="{% url 'search' %}" method="GET" id="rf-search-form">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-2">
+                    <label class="small text-muted mb-1">Keywords</label>
+                    <input type="text" name="keywords" class="form-control form-control-sm rounded-0" placeholder="e.g. Modern, furnished" value="{{ values.keywords|default:'' }}">
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <label class="small text-muted mb-1">City</label>
+                    <select name="city" class="form-select form-select-sm rounded-0">
+                        <option value="">All cities</option>
+                        {% for city in city_choices %}
+                            <option value="{{ city }}" {% if values.city == city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <label class="small text-muted mb-1">Max price (৳)</label>
+                    <input type="number" name="price" class="form-control form-control-sm rounded-0" placeholder="Max" value="{{ values.price|default:'' }}">
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <label class="small text-muted mb-1">Max bedrooms</label>
+                    <input type="number" name="bedrooms" class="form-control form-control-sm rounded-0" placeholder="Max beds" value="{{ values.bedrooms|default:'' }}">
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <label class="small text-muted mb-1">Tenant fit</label>
+                    <select name="tenant" class="form-select form-select-sm rounded-0">
+                        <option value="">Any</option>
+                        <option value="bachelor" {% if visitor_tenant == 'bachelor' %}selected{% endif %}>Bachelor</option>
+                        <option value="family" {% if visitor_tenant == 'family' %}selected{% endif %}>Family</option>
+                        <option value="girl" {% if visitor_tenant == 'girl' %}selected{% endif %}>Girl</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <label class="small text-muted mb-1">Sort by</label>
+                    <select name="sort" class="form-select form-select-sm rounded-0">
+                        <option value="">Newest first</option>
+                        <option value="match" {% if values.sort == 'match' %}selected{% endif %}>Best match</option>
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-classic btn-sm flex-grow-1 py-2">Apply</button>
+                    <a href="{% url 'search' %}?reset=1" class="btn btn-outline-secondary btn-sm rounded-0" title="Clear filters and tenant preference">Reset</a>
+                </div>
+            </div>
+        </form>
+
+        <hr class="my-4">
+
+        <p class="small text-muted mb-2 fw-semibold text-uppercase" style="letter-spacing:0.06em;">Quick tenant fit</p>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a href="{% url 'search' %}?tenant=all{% if chip_query %}&{{ chip_query }}{% endif %}"
+               class="rf-city-chip {% if not visitor_tenant %}border-success border-2{% endif %}">All</a>
+            <a href="{% url 'search' %}?tenant=bachelor{% if chip_query %}&{{ chip_query }}{% endif %}"
+               class="rf-city-chip {% if visitor_tenant == 'bachelor' %}border-success border-2{% endif %}">Bachelor</a>
+            <a href="{% url 'search' %}?tenant=family{% if chip_query %}&{{ chip_query }}{% endif %}"
+               class="rf-city-chip {% if visitor_tenant == 'family' %}border-success border-2{% endif %}">Family</a>
+            <a href="{% url 'search' %}?tenant=girl{% if chip_query %}&{{ chip_query }}{% endif %}"
+               class="rf-city-chip {% if visitor_tenant == 'girl' %}border-success border-2{% endif %}">Girl</a>
+            {% if visitor_tenant %}<span class="small text-muted ms-1">Showing {{ visitor_tenant }}-friendly listings (includes “Any”).</span>{% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white border shadow-sm mb-4">
+        <div class="px-4 py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h2 class="h6 fw-bold mb-1"><i class="bi bi-map text-success me-2"></i>Map-based search</h2>
+                <p class="small text-muted mb-0">Pins use city-level locations for the current search results.</p>
+            </div>
+            <span class="badge rounded-0 bg-light text-dark border">{{ result_count }} results</span>
+        </div>
+        <div class="rf-map-shell">
+            <div id="rfSearchMap"></div>
+            <div class="rf-map-city-list border-start bg-light">
+                {% for city in city_choices %}
+                    <a class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom text-decoration-none text-dark small"
+                       href="{% url 'search' %}?city={{ city|urlencode }}{% if visitor_tenant %}&tenant={{ visitor_tenant }}{% endif %}">
+                        <span>{{ city }}</span>
+                        <i class="bi bi-chevron-right text-muted"></i>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% if listings.paginator.count == 0 %}
+        <div class="text-center py-5 border bg-white">
+            <p class="text-muted mb-3">No listings match these filters.</p>
+            <a href="{% url 'search' %}?reset=1" class="btn btn-classic btn-sm me-2">Clear filters</a>
+            <a href="{% url 'listings' %}" class="btn btn-outline-dark btn-sm rounded-0">Back to browse</a>
+        </div>
+    {% else %}
+        <div class="row g-3" id="listings-container">
+            {% include 'listings/_listing_items.html' %}
+        </div>
+    {% endif %}
+
+    {% if listings.has_next %}
+        <div id="scroll-trigger" data-next-page="2" aria-hidden="true"></div>
+    {% endif %}
+
+    <div id="loading" class="text-center my-5 d-none">
+        <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted small mt-2">Loading more properties…</p>
+    </div>
+</div>
+
+{{ map_points|json_script:"rf-map-points" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    const mapEl = document.getElementById('rfSearchMap');
+    const dataEl = document.getElementById('rf-map-points');
+    if (mapEl && dataEl && typeof L !== 'undefined') {
+        const points = JSON.parse(dataEl.textContent || '[]');
+        const map = L.map(mapEl, { scrollWheelZoom: false }).setView([23.685, 90.3563], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        const icon = L.divIcon({ className: '', html: '<div class="rf-map-pin"></div>', iconSize: [22, 22], iconAnchor: [11, 20] });
+        const bounds = [];
+        points.forEach(function (item) {
+            const marker = L.marker([item.lat, item.lng], { icon }).addTo(map);
+            marker.bindPopup(
+                '<strong>' + item.title + '</strong><br>' +
+                item.city + ' · ' + item.tenant + '<br>' +
+                '৳' + item.price + ' / mo<br>' +
+                '<a href="' + item.url + '">View listing</a>'
+            );
+            bounds.push([item.lat, item.lng]);
+        });
+        if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+    }
+
+    let loading = false;
+    let nextPage = 2;
+    const trigger = document.getElementById('scroll-trigger');
+    const container = document.getElementById('listings-container');
+    const loadingIndicator = document.getElementById('loading');
+    const maxPage = {% if listings.paginator.num_pages %}{{ listings.paginator.num_pages }}{% else %}1{% endif %};
+
+    if (!trigger || !container) return;
+
+    window.addEventListener('scroll', function () {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            loadMore();
+        }
+    });
+
+    async function loadMore() {
+        if (loading || !trigger || nextPage > maxPage) return;
+
+        loading = true;
+        loadingIndicator.classList.remove('d-none');
+
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('page', nextPage);
+
+        try {
+            const response = await fetch(currentUrl.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const html = (await response.text()).trim();
+
+            if (!html || html.length < 20) {
+                trigger.remove();
+            } else {
+                container.insertAdjacentHTML('beforeend', html);
+                nextPage++;
+                if (nextPage > maxPage) trigger.remove();
+            }
+        } catch (e) {
+            console.error('Scroll load error:', e);
+        } finally {
+            loading = false;
+            loadingIndicator.classList.add('d-none');
+        }
+    }
+})();
+</script>
+{% endblock %}

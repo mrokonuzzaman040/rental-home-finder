@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %} - My Favorites{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="h4 mb-4 fw-bold">My Saved Properties</h2>
+        
+        <div class="row g-3">
+            {% if favorites %}
+                {% for favorite in favorites %}
+                    <div class="col-md-4">
+                        <div class="card card-classic h-100">
+                            <div class="position-relative">
+                                {% if favorite.listing.main_image %}
+                                    <img src="{{ favorite.listing.main_image.url }}" class="card-img-top" alt="{{ favorite.listing.title }}">
+                                {% else %}
+                                    <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Property">
+                                {% endif %}
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <form action="{% url 'toggle_favorite' favorite.listing.id %}" method="POST" class="m-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger border-0 rounded-circle shadow-sm" style="width: 32px; height: 32px; padding: 0;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="card-title text-truncate">{{ favorite.listing.title }}</h3>
+                                <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{ favorite.listing.city }}</p>
+                                <div class="price-tag mb-3">৳{{ favorite.listing.price }} <small class="text-muted fw-normal">/ mo</small></div>
+                                <a href="{% url 'listing' favorite.listing.id %}" class="btn btn-classic w-100">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="bg-white border text-center py-5">
+                        <i class="bi bi-heart display-4 text-muted mb-3 d-block"></i>
+                        <p class="text-muted">You haven't saved any properties yet.</p>
+                        <a href="{% url 'listings' %}" class="btn btn-sm btn-outline-dark rounded-0 mt-2">Browse Properties</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

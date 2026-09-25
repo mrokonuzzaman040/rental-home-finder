@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %} - Profile Settings{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <h2 class="h4 mb-4 fw-bold">Account Profile</h2>
+        <div class="bg-white border p-4 shadow-sm">
+            <div class="mb-4 text-center border-bottom pb-4">
+                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <span class="h2 mb-0">{{ user.username|first|upper }}</span>
+                </div>
+                <h5 class="fw-bold mb-0">{{ user.username }}</h5>
+                <p class="text-muted small">{{ user.email|default:"No email provided" }}</p>
+            </div>
+            
+            <div class="mb-3">
+                <label class="x-small text-uppercase text-muted d-block mb-1">Username</label>
+                <div class="p-2 border bg-light text-muted">{{ user.username }}</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="x-small text-uppercase text-muted d-block mb-1">Email Address</label>
+                <div class="p-2 border bg-light text-muted">{{ user.email|default:"Not set" }}</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="x-small text-uppercase text-muted d-block mb-1">Member Since</label>
+                <div class="p-2 border bg-light text-muted">{{ user.date_joined|date:"F d, Y" }}</div>
+            </div>
+
+            <div class="mb-4 p-3 border bg-light">
+                <label class="x-small text-uppercase text-muted d-block mb-2">Rewards</label>
+                <p class="h4 mb-1 fw-bold text-success">{{ wallet_summary.balance }} <span class="fs-6 text-dark">points</span></p>
+                <p class="small text-muted mb-3">{{ wallet_summary.tier_label }} tier · {{ wallet_summary.lifetime_points }} lifetime pts</p>
+                <a href="{% url 'rewards' %}" class="btn btn-sm btn-classic">View rewards &amp; history</a>
+            </div>
+
+            <p class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i> Profile editing is currently restricted to the system administrator.</p>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h2 class="h4 mb-4 fw-bold">Security</h2>
+        <div class="bg-white border p-4 shadow-sm">
+            <div class="mb-4">
+                <h6 class="fw-bold mb-2">Password Management</h6>
+                <p class="small text-muted">To change your password, please contact our support team or use the automated recovery system.</p>
+                <button class="btn btn-outline-dark rounded-0 small px-4 py-2" disabled>Change Password</button>
+            </div>
+            <hr>
+            <div class="mt-4">
+                <h6 class="fw-bold mb-2 text-danger">Danger Zone</h6>
+                <p class="small text-muted">Once you delete your account, there is no going back. Please be certain.</p>
+                <button class="btn btn-outline-danger rounded-0 small px-4 py-2" disabled>Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

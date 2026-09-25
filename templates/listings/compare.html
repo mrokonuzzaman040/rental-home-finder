@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %} - Compare Properties{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2 class="h4 fw-bold mb-0">Property Comparison</h2>
+        <a href="{% url 'clear_compare' %}" class="btn btn-sm btn-outline-danger rounded-0">Clear List</a>
+    </div>
+</div>
+
+{% if listings %}
+<div class="bg-white border shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-pro mb-0 text-center">
+            <thead>
+                <tr>
+                    <th class="text-start ps-4" style="width: 200px;">Features</th>
+                    {% for item in listings %}
+                        <th>
+                            <img src="{{ item.main_image.url }}" class="mb-2 border" style="width: 150px; height: 100px; object-fit: cover;">
+                            <h6 class="fw-bold small mb-0">{{ item.title }}</h6>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">Monthly Rent</td>
+                    {% for item in listings %}
+                        <td class="h5 fw-bold text-success">৳{{ item.price }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">City</td>
+                    {% for item in listings %}
+                        <td>{{ item.city }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">Bedrooms</td>
+                    {% for item in listings %}
+                        <td>{{ item.bedrooms }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">Bathrooms</td>
+                    {% for item in listings %}
+                        <td>{{ item.bathrooms }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">Total Area</td>
+                    {% for item in listings %}
+                        <td>{{ item.square_feet }} sqft</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">Amenities</td>
+                    {% for item in listings %}
+                        <td class="small">
+                            {% if item.has_ac %}AC, {% endif %}
+                            {% if item.is_furnished %}Furnished, {% endif %}
+                            {% if item.garage %}Garage ({{ item.garage }}){% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="text-start ps-4 fw-bold text-muted">Action</td>
+                    {% for item in listings %}
+                        <td><a href="{% url 'listing' item.id %}" class="btn btn-sm btn-classic">Go to Page</a></td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="bg-white border p-5 text-center">
+    <p class="text-muted">No properties selected for comparison.</p>
+    <a href="{% url 'listings' %}" class="btn btn-classic">Browse Properties</a>
+</div>
+{% endif %}
+{% endblock %}

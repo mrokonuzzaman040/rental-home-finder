@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} - Edit {{ listing.title }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="h4 mb-4 fw-bold">Edit Property: {{ listing.title }}</h2>
+        <div class="bg-white border p-4 shadow-sm">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-8">
+                        {{ form.title|as_crispy_field }}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0">Description</label>
+                                <button type="button" class="btn btn-sm btn-outline-success border-0 rounded-pill" onclick="generateAIDescription(this)">
+                                    <i class="bi bi-robot me-1"></i>AI Rewrite
+                                </button>
+                            </div>
+                            {{ form.description }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">{{ form.city|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.address|as_crispy_field }}</div>
+                        </div>
+                        {{ form.contact_phone|as_crispy_field }}
+                        {{ form.tenant_fit_note|as_crispy_field }}
+                    </div>
+
+                    <script>
+                        async function generateAIDescription(button) {
+                            const title = document.querySelector('[name="title"]').value;
+                            const city = document.querySelector('[name="city"]').value;
+                            const beds = document.querySelector('[name="bedrooms"]').value;
+                            const baths = document.querySelector('[name="bathrooms"]').value;
+                            const sqft = document.querySelector('[name="square_feet"]').value;
+                            const furnished = document.querySelector('[name="is_furnished"]').checked;
+                            const ac = document.querySelector('[name="has_ac"]').checked;
+                            const heating = document.querySelector('[name="has_heating"]').checked;
+                            
+                            const descArea = document.querySelector('[name="description"]');
+                            const originalBtnText = button.innerHTML;
+                            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Thinking...';
+                            button.disabled = true;
+                            
+                            try {
+                                const response = await fetch("{% url 'api_generate_description' %}", {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': '{{ csrf_token }}'
+                                    },
+                                    body: JSON.stringify({
+                                        title, city, beds, baths, sqft, 
+                                        furnished, ac, heating
+                                    })
+                                });
+                                
+                                const data = await response.json();
+                                if(data.description) {
+                                    descArea.value = data.description;
+                                } else {
+                                    alert("AI Error: " + (data.error || "Unknown error"));
+                                }
+                            } catch (error) {
+                                alert("Connection failed: " + error);
+                            } finally {
+                                button.innerHTML = originalBtnText;
+                                button.disabled = false;
+                            }
+                        }
+                    </script>
+                    <div class="col-md-4">
+                        {% if listing.main_image %}
+                            <div class="mb-3">
+                                <label class="small text-muted d-block mb-2">Current Image</label>
+                                <img src="{{ listing.main_image.url }}" class="img-fluid border mb-2" style="max-height: 150px;">
+                            </div>
+                        {% endif %}
+                        {{ form.price|as_crispy_field }}
+                        <div class="row">
+                            <div class="col-md-6">{{ form.bedrooms|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.bathrooms|as_crispy_field }}</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">{{ form.square_feet|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.garage|as_crispy_field }}</div>
+                        </div>
+                        {{ form.status|as_crispy_field }}
+                        {{ form.tenant_type|as_crispy_field }}
+                        {{ form.main_image|as_crispy_field }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Upload More Images</label>
+                            <input type="file" name="images" class="form-control rounded-0" multiple>
+                            <small class="text-muted">New images will be added to the current gallery.</small>
+                        </div>
+                        <div class="bg-light p-3 border mb-3">
+                            {{ form.is_furnished|as_crispy_field }}
+                            {{ form.has_ac|as_crispy_field }}
+                            {{ form.has_heating|as_crispy_field }}
+                        </div>
+                        <button type="submit" class="btn btn-classic w-100 py-3">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

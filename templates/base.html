@@ -1,0 +1,550 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% static 'logo/favicon.jpeg' as favicon_url %}
+    {% static 'og/og_image.jpeg' as og_image_url %}
+    <title>HouseFinderBD {% block title %}{% endblock %}</title>
+    <meta name="description" content="HouseFinderBD helps renters find homes across Bangladesh by city, budget, tenant fit, and map search.">
+    <meta property="og:site_name" content="HouseFinderBD">
+    <meta property="og:title" content="HouseFinderBD - Find your dream home easily">
+    <meta property="og:description" content="Find rental homes across Bangladesh with filters, local city choices, and map-based search.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_image_url }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/jpeg" href="{{ favicon_url }}">
+    <link rel="apple-touch-icon" href="{{ favicon_url }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --deep-green: #06311f;
+            --black: #111111;
+            --white: #ffffff;
+            --border-color: #e0e0e0;
+            --sidebar-width: 260px;
+        }
+
+        body { 
+            background-color: #f8f9fa; 
+            font-family: 'Inter', sans-serif;
+            color: var(--black);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+        .navbar.navbar-rf {
+            background: var(--white) !important;
+            padding: 0;
+            border-bottom: 1px solid rgba(6, 49, 31, 0.08);
+            box-shadow: 0 4px 24px -8px rgba(17, 17, 17, 0.08);
+            z-index: 1050;
+            border-top: 3px solid var(--deep-green);
+        }
+        .navbar-rf .navbar-inner {
+            padding: 0.65rem 0;
+            min-height: 58px;
+            align-items: center;
+        }
+        .navbar-brand.rf-brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--black) !important;
+            letter-spacing: -0.02em;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .navbar-brand.rf-brand:hover { color: var(--deep-green) !important; }
+        .rf-brand-logo {
+            width: min(230px, 58vw);
+            height: 44px;
+            object-fit: contain;
+            object-position: left center;
+            flex-shrink: 0;
+        }
+        .rf-brand-text .rf-accent {
+            color: var(--deep-green);
+            font-weight: 700;
+        }
+        .rf-nav-link {
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
+            color: #444 !important;
+            padding: 0.5rem 0.9rem !important;
+            border-radius: 8px;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .rf-nav-link:hover {
+            background: rgba(6, 49, 31, 0.07);
+            color: var(--deep-green) !important;
+        }
+        .rf-nav-actions {
+            border-left: 1px solid var(--border-color);
+            padding-left: 1rem !important;
+            margin-left: 0.25rem !important;
+        }
+        @media (max-width: 991.98px) {
+            .rf-nav-actions {
+                border-left: none;
+                padding-left: 0 !important;
+                margin-left: 0 !important;
+                padding-top: 0.75rem;
+                margin-top: 0.5rem;
+                border-top: 1px solid var(--border-color);
+            }
+        }
+        .rf-points-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.72rem !important;
+            font-weight: 600 !important;
+            color: var(--deep-green) !important;
+            background: rgba(6, 49, 31, 0.09);
+            border: 1px solid rgba(6, 49, 31, 0.12);
+            padding: 0.35rem 0.65rem !important;
+            border-radius: 100px;
+        }
+        .rf-points-pill:hover {
+            background: rgba(6, 49, 31, 0.14);
+            color: var(--deep-green) !important;
+        }
+        .btn-rf-primary {
+            background: var(--deep-green);
+            color: #fff !important;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.45rem 1rem;
+            border-radius: 8px;
+            border: none;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .btn-rf-primary:hover {
+            background: var(--black);
+            color: #fff !important;
+        }
+        a.btn-rf-primary,
+        a.btn-rf-ghost {
+            display: inline-block;
+            text-decoration: none !important;
+            line-height: 1.35;
+            text-align: center;
+        }
+        .btn-rf-ghost {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #444 !important;
+            padding: 0.45rem 0.85rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            text-decoration: none;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+        .btn-rf-ghost:hover {
+            border-color: var(--deep-green);
+            color: var(--deep-green) !important;
+        }
+        .rf-logout {
+            font-size: 0.78rem !important;
+            color: #888 !important;
+            padding: 0.45rem 0.6rem !important;
+        }
+        .rf-logout:hover { color: var(--black) !important; }
+        .navbar-toggler:focus { box-shadow: 0 0 0 0.15rem rgba(6, 49, 31, 0.2); }
+        .navbar-toggler {
+            border-color: rgba(6, 49, 31, 0.2);
+            padding: 0.4rem 0.55rem;
+        }
+
+        /* Modern Dashboard Layout */
+        .dashboard-wrapper { display: flex; min-height: calc(100vh - 64px); }
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 1rem;
+            flex-shrink: 0;
+        }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            color: #666;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .sidebar-link:hover, .sidebar-link.active { background: #f0f4f2; color: var(--deep-green); }
+        .sidebar-link i { margin-right: 0.75rem; font-size: 1.1rem; }
+
+        .main-content { flex-grow: 1; padding: 2rem 3rem; }
+        .public-container { padding: 3rem 0; }
+
+        /* Classic UI */
+        .card-classic { border: 1px solid var(--border-color); border-radius: 0; background: var(--white); }
+        .btn-classic {
+            background-color: var(--deep-green);
+            color: var(--white);
+            border-radius: 0;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border: none;
+        }
+        .btn-classic:hover { background-color: var(--black); }
+
+        .table-pro { font-size: 0.8rem; background: var(--white); }
+        .table-pro thead th {
+            background: #fdfdfd;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            color: #888;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+        }
+        .table-pro tbody td { padding: 1.2rem 1rem; border-bottom: 1px solid #f2f2f2; }
+        
+        .alert { border-radius: 0; border: none; font-size: 0.8rem; }
+
+        /* Shared auth panels (login / register pages + inquiry modal) */
+        .auth-brand-bar {
+            height: 4px;
+            background: linear-gradient(90deg, var(--deep-green), #0a5c3d);
+        }
+        .auth-panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--black);
+            letter-spacing: -0.02em;
+        }
+        .auth-panel-sub {
+            font-size: 0.8rem;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        .auth-panel-card {
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            box-shadow: 0 12px 40px rgba(17, 17, 17, 0.06);
+        }
+        .auth-panel-body {
+            padding: 1.75rem 1.75rem 1.5rem;
+        }
+        .auth-panel-split-top {
+            margin-top: 1rem !important;
+            padding-top: 1.75rem !important;
+            border-top: 1px solid var(--border-color);
+        }
+        .auth-panel-body .form-control,
+        .auth-panel-body .form-select {
+            border-radius: 0;
+            font-size: 0.85rem;
+        }
+        .auth-panel-body .form-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #555;
+            margin-bottom: 0.35rem;
+        }
+        .auth-tab-pills.nav-pills {
+            gap: 0;
+            padding: 0;
+            margin: 0;
+            border: 1px solid var(--border-color);
+            background: #f3f5f4;
+        }
+        .auth-tab-pills .nav-item { flex: 1; }
+        .auth-tab-pills .nav-link {
+            border-radius: 0 !important;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            padding: 0.75rem 0.5rem;
+            border: none;
+            border-right: 1px solid var(--border-color);
+            background: transparent;
+        }
+        .auth-tab-pills .nav-item:last-child .nav-link { border-right: none; }
+        .auth-tab-pills .nav-link:hover:not(.active) {
+            background: rgba(6, 49, 31, 0.06);
+            color: var(--deep-green);
+        }
+        .auth-tab-pills .nav-link.active {
+            background: var(--deep-green) !important;
+            color: var(--white) !important;
+        }
+        .auth-tab-pane-wrap {
+            background: #fafbfa;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            padding: 1.25rem 1.35rem 1.35rem;
+        }
+        .auth-tab-pane-wrap .asteriskField { color: #c45c5c; }
+
+        /* Inquiry modal */
+        .modal-auth-dialog {
+            max-width: 440px;
+        }
+        .modal-auth-content {
+            border: none;
+            border-radius: 0;
+            box-shadow: 0 22px 56px rgba(17, 17, 17, 0.14);
+            overflow: hidden;
+        }
+        .modal-auth-header {
+            border: none;
+            padding: 1.35rem 1.5rem 0.25rem;
+            text-align: center;
+        }
+        .modal-auth-header .btn-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+        .modal-auth-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(6, 49, 31, 0.08);
+            color: var(--deep-green);
+            font-size: 1.35rem;
+        }
+        .modal-auth-footer-note {
+            font-size: 0.72rem;
+            color: #888;
+            text-align: center;
+            padding: 0 1.25rem 1.25rem;
+            margin: 0;
+        }
+        .modal-auth-footer-note a {
+            color: var(--deep-green);
+            font-weight: 600;
+        }
+
+        /* Listing sidebar - inquiry form */
+        .inquiry-form-fields .form-control,
+        .inquiry-form-fields textarea {
+            border-radius: 0;
+            font-size: 0.85rem;
+        }
+        .inquiry-form-fields .inquiry-field-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        /* Floating AI assistant */
+        .ai-chat-fab {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            z-index: 1080;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% !important;
+        }
+        .ai-chat-panel {
+            position: fixed;
+            bottom: 5.5rem;
+            right: 1.25rem;
+            width: min(100vw - 2rem, 400px);
+            height: min(72vh, 540px);
+            z-index: 1075;
+            max-height: calc(100vh - 7rem);
+        }
+        .ai-chat-panel-head { background: #f8f9fa !important; }
+        .ai-chat-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            background: #fafafa;
+        }
+        .ai-msg { display: flex; width: 100%; }
+        .ai-msg-user { justify-content: flex-end; }
+        .ai-msg-bot { justify-content: flex-start; }
+        .ai-msg-error .ai-msg-inner {
+            background: #fdeaea;
+            border-color: #f5c2c7;
+            color: #842029;
+        }
+        .ai-msg-inner {
+            max-width: 88%;
+            padding: 0.55rem 0.75rem;
+            border: 1px solid var(--border-color);
+            font-size: 0.82rem;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .ai-msg-user .ai-msg-inner {
+            background: var(--deep-green);
+            color: #fff;
+            border-color: var(--deep-green);
+        }
+        .ai-msg-bot .ai-msg-inner {
+            background: #fff;
+        }
+        .ai-chat-suggestions:empty { display: none !important; }
+        .ai-chat-limit-note { font-size: 0.68rem; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% csrf_token %}
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top navbar-rf">
+        <div class="container navbar-inner d-flex flex-wrap align-items-center">
+            <a class="navbar-brand rf-brand d-flex align-items-center gap-2 me-auto" href="{% url 'listings' %}">
+                <img class="rf-brand-logo" src="{% static 'logo/logo.jpeg' %}" alt="HouseFinderBD">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-lg-center gap-lg-1 my-3 my-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link rf-nav-link" href="{% url 'listings' %}"><i class="bi bi-grid-3x3-gap me-1 d-none d-sm-inline opacity-75"></i>Browse</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rf-nav-link" href="{% url 'search' %}"><i class="bi bi-search me-1 d-none d-sm-inline opacity-75"></i>Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rf-nav-link" href="{% url 'property_list' %}"><i class="bi bi-house-door me-1 d-none d-sm-inline opacity-75"></i>Buy &amp; Sell</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rf-nav-link" href="{% url 'hotel_list' %}"><i class="bi bi-building me-1 d-none d-sm-inline opacity-75"></i>Hotels</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav align-items-lg-center gap-2 rf-nav-actions ms-lg-3">
+                    {% if user.is_authenticated %}
+                        {% if reward_nav %}
+                        <li class="nav-item">
+                            <a class="nav-link rf-points-pill py-1" href="{% url 'rewards' %}" title="Rewards">
+                                <i class="bi bi-gift-fill me-1"></i>{{ reward_nav.balance }} pts
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="btn btn-rf-primary" href="{% url 'dashboard' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link rf-logout" href="{% url 'logout' %}">Log out</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-rf-ghost" href="{% url 'login' %}">Log in</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-rf-primary" href="{% url 'register' %}">Sign up</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="{% if request.resolver_match.url_name in 'dashboard,add_listing,edit_listing,messages,profile,favorites,rewards,add_property,edit_property,add_hotel,edit_hotel,add_room' %}dashboard-wrapper{% endif %}">
+        {% if user.is_authenticated and request.resolver_match.url_name in 'dashboard,add_listing,edit_listing,messages,profile,favorites,rewards,add_property,edit_property,add_hotel,edit_hotel,add_room' %}
+            <aside class="sidebar d-none d-md-block">
+                <div class="mb-5 text-center px-3">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="h4 mb-0">{{ user.username|first|upper }}</span>
+                    </div>
+                    <h6 class="mb-0 fw-bold">{{ user.username }}</h6>
+                    <p class="text-muted small">{{ user.profile.get_role_display|default:"User" }}</p>
+                </div>
+                <nav>
+                    <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="bi bi-grid-1x2"></i>Overview
+                    </a>
+                    <a href="{% url 'rewards' %}" class="sidebar-link {% if request.resolver_match.url_name == 'rewards' %}active{% endif %}">
+                        <i class="bi bi-gift"></i>Rewards
+                    </a>
+                    {% if user.is_staff or user.profile.role == 'flat_owner' %}
+                    <a href="{% url 'add_listing' %}" class="sidebar-link {% if request.resolver_match.url_name == 'add_listing' %}active{% endif %}">
+                        <i class="bi bi-plus-square"></i>Add Rental Listing
+                    </a>
+                    {% endif %}
+                    {% if user.is_staff or user.profile.role == 'property_owner' %}
+                    <a href="{% url 'add_property' %}" class="sidebar-link {% if request.resolver_match.url_name == 'add_property' %}active{% endif %}">
+                        <i class="bi bi-house-add"></i>Add Property (Sale)
+                    </a>
+                    {% endif %}
+                    {% if user.is_staff or user.profile.role == 'hotel_manager' %}
+                    <a href="{% url 'add_hotel' %}" class="sidebar-link {% if request.resolver_match.url_name == 'add_hotel' %}active{% endif %}">
+                        <i class="bi bi-building-add"></i>Add Hotel
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'messages' %}" class="sidebar-link {% if request.resolver_match.url_name == 'messages' %}active{% endif %}">
+                        <i class="bi bi-envelope"></i>Messages
+                    </a>
+                    <a href="{% url 'favorites' %}" class="sidebar-link {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}">
+                        <i class="bi bi-heart"></i>Favorites
+                    </a>
+                    <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                        <i class="bi bi-person-circle"></i>Profile Settings
+                    </a>
+                </nav>
+            </aside>
+        {% endif %}
+
+        <div class="{% if request.resolver_match.url_name in 'dashboard,add_listing,edit_listing,messages,profile,favorites,rewards,add_property,edit_property,add_hotel,edit_hotel,add_room' %}main-content{% else %}container public-container{% endif %}">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <footer class="bg-white border-top py-4 mt-auto">
+        <div class="container text-center">
+            <p class="text-muted small mb-0">&copy; 2026 HouseFinderBD. The professional standard in rental management.</p>
+        </div>
+    </footer>
+
+    {% include 'partials/location_modal.html' %}
+
+    {% include 'partials/ai_chat_widget.html' %}
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% include 'partials/location_modal_scripts.html' %}
+</body>
+</html>

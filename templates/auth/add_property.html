@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} - List Property for Sale{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="h4 mb-4 fw-bold">List Property for Sale</h2>
+        <div class="bg-white border p-4 shadow-sm">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-8">
+                        {{ form.title|as_crispy_field }}
+                        {{ form.description|as_crispy_field }}
+                        <div class="row">
+                            <div class="col-md-6">{{ form.city|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.address|as_crispy_field }}</div>
+                        </div>
+                        {{ form.contact_phone|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form.property_kind|as_crispy_field }}
+                        {{ form.sale_price|as_crispy_field }}
+                        <div class="row">
+                            <div class="col-md-6">{{ form.bedrooms|as_crispy_field }}</div>
+                            <div class="col-md-6">{{ form.bathrooms|as_crispy_field }}</div>
+                        </div>
+                        {{ form.square_feet|as_crispy_field }}
+                        {{ form.status|as_crispy_field }}
+                        {{ form.main_image|as_crispy_field }}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Additional Gallery Images</label>
+                            <input type="file" name="images" class="form-control rounded-0" multiple>
+                        </div>
+                        <button type="submit" class="btn btn-classic w-100 py-3">Publish Listing</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

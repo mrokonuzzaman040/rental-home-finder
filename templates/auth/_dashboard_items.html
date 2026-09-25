@@ -1,0 +1,31 @@
+{% for listing in listings %}
+    <tr class="listing-row">
+        <td>
+            <div class="d-flex align-items-center">
+                {% if listing.main_image %}
+                    <img src="{{ listing.main_image.url }}" class="me-3" style="width: 45px; height: 45px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light me-3 border d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                        <i class="bi bi-image text-muted"></i>
+                    </div>
+                {% endif %}
+                <span class="fw-bold">{{ listing.title }}</span>
+            </div>
+        </td>
+        <td class="text-muted">{{ listing.city }}</td>
+        <td class="fw-bold">৳{{ listing.price }}</td>
+        <td><span class="badge bg-light text-dark border px-2 py-1">{{ listing.inquiries.count }} Queries</span></td>
+        <td>
+            <span class="badge rounded-0 {% if listing.status == 'available' %}bg-success-subtle text-success border-success{% elif listing.status == 'rented' %}bg-danger-subtle text-danger border-danger{% else %}bg-warning-subtle text-warning border-warning{% endif %} border px-2 py-1 small">
+                {{ listing.get_status_display }}
+            </span>
+        </td>
+        <td class="text-end">
+            <div class="btn-group">
+                <a href="{% url 'listing' listing.id %}" class="btn btn-sm btn-outline-dark rounded-0 px-3">View</a>
+                <a href="{% url 'edit_listing' listing.id %}" class="btn btn-sm btn-outline-dark rounded-0 px-3">Edit</a>
+                <a href="{% url 'delete_listing' listing.id %}" class="btn btn-sm btn-outline-danger rounded-0 px-3">Delete</a>
+            </div>
+        </td>
+    </tr>
+{% endfor %}

@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% block title %} - Dashboard{% endblock %}
+{% block content %}
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 mb-0 fw-bold">Performance Overview</h2>
+        <span class="text-muted small">Real-time data for {{ user.username }}</span>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="bg-white border p-4 shadow-sm text-center">
+                <span class="text-muted small d-block mb-1 text-uppercase fw-bold">Active Listings</span>
+                <span class="h2 fw-bold mb-0">{{ total_listings }}</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-white border p-4 shadow-sm text-center">
+                <span class="text-muted small d-block mb-1 text-uppercase fw-bold">Total Inquiries</span>
+                <span class="h2 fw-bold mb-0 text-success">{{ total_inquiries }}</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-white border p-4 shadow-sm text-center">
+                <span class="text-muted small d-block mb-1 text-uppercase fw-bold">Engagement Rate</span>
+                <span class="h2 fw-bold mb-0 text-primary">{{ engagement_rate }}%</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Property Management Table -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 h6 text-uppercase">Property Portfolio</h5>
+        {% if user.is_staff or profile.role == 'flat_owner' %}
+        <a href="{% url 'add_listing' %}" class="text-dark small fw-bold text-decoration-none">+ New Property</a>
+        {% endif %}
+    </div>
+    <div class="bg-white border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-pro mb-0">
+                <thead>
+                    <tr>
+                        <th>Listing Details</th>
+                        <th>Location</th>
+                        <th>Rent (BDT)</th>
+                        <th>Inquiries</th>
+                        <th>Status</th>
+                        <th class="text-end">Management</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboard-container">
+                    {% include 'auth/_dashboard_items.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="loading-dash" class="text-center py-3 d-none">
+        <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+    </div>
+    {% if listings.has_next %}
+        <div id="dash-scroll-trigger" data-next-page="2"></div>
+    {% endif %}
+</div>
+
+<!-- Inquiries Section -->
+<div>
+    <h5 class="fw-bold mb-3 h6 text-uppercase">Recent Inquiries (Queries)</h5>
+    <div class="bg-white border">
+        <table class="table table-pro mb-0">
+            <thead>
+                <tr>
+                    <th>Sender</th>
+                    <th>Property Interested In</th>
+                    <th>Date Received</th>
+                    <th>Message Snippet</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if inquiries %}
+                    {% for inquiry in inquiries %}
+                        <tr>
+                            <td>
+                                <span class="d-block fw-bold">{{ inquiry.name }}</span>
+                                <span class="text-muted x-small">{{ inquiry.email }}</span>
+                            </td>
+                            <td><span class="small">{{ inquiry.listing.title }}</span></td>
+                            <td class="small">{{ inquiry.contact_date|date:"M d, Y" }}</td>
+                            <td class="text-muted small">{{ inquiry.message|truncatewords:8 }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-dark rounded-0 px-3" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ inquiry.id }}">Open</button>
+                            </td>
+                        </tr>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="inquiryModal{{ inquiry.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-0 border-0 shadow-lg">
+                                    <div class="modal-header border-bottom-0 pb-0">
+                                        <h5 class="modal-title fw-bold">Inquiry Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <div class="mb-4">
+                                            <label class="x-small text-uppercase text-muted d-block mb-1">From</label>
+                                            <h6 class="fw-bold mb-0">{{ inquiry.name }}</h6>
+                                            <p class="mb-0 small text-muted">{{ inquiry.email }} | {{ inquiry.phone }}</p>
+                                        </div>
+                                        <div class="bg-light p-3 border">
+                                            <p class="small mb-0 text-dark">{{ inquiry.message }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-top-0 pt-0">
+                                        <a href="mailto:{{ inquiry.email }}" class="btn btn-classic w-100">Reply via Email</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="5" class="text-center py-5 text-muted small">No inquiries received yet.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if profile.role == 'property_owner' or property_listings %}
+<div class="mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 h6 text-uppercase">Properties for Sale</h5>
+        <a href="{% url 'add_property' %}" class="text-dark small fw-bold text-decoration-none">+ New Property</a>
+    </div>
+    <div class="bg-white border overflow-hidden">
+        <table class="table table-pro mb-0">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>City</th>
+                    <th>Sale Price (BDT)</th>
+                    <th>Status</th>
+                    <th class="text-end">Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prop in property_listings %}
+                <tr>
+                    <td>{{ prop.title }}</td>
+                    <td class="small">{{ prop.city }}</td>
+                    <td class="small">৳{{ prop.sale_price }}</td>
+                    <td class="small">{{ prop.get_status_display }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'edit_property' prop.id %}" class="btn btn-sm btn-outline-dark rounded-0">Edit</a>
+                        <a href="{% url 'delete_property' prop.id %}" class="btn btn-sm btn-outline-danger rounded-0">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-4 text-muted small">No properties listed yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if profile.role == 'hotel_manager' or hotels %}
+<div class="mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 h6 text-uppercase">My Hotels</h5>
+        <a href="{% url 'add_hotel' %}" class="text-dark small fw-bold text-decoration-none">+ New Hotel</a>
+    </div>
+    <div class="bg-white border overflow-hidden">
+        <table class="table table-pro mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>City</th>
+                    <th>Rooms</th>
+                    <th class="text-end">Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hotel in hotels %}
+                <tr>
+                    <td>{{ hotel.name }}</td>
+                    <td class="small">{{ hotel.city }}</td>
+                    <td class="small">{{ hotel.rooms.count }}
+                        <a href="{% url 'add_room' hotel.id %}" class="ms-2 small">+ Add room</a>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'edit_hotel' hotel.id %}" class="btn btn-sm btn-outline-dark rounded-0">Edit</a>
+                        <a href="{% url 'delete_hotel' hotel.id %}" class="btn btn-sm btn-outline-danger rounded-0">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center py-4 text-muted small">No hotels listed yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if bookings %}
+<div class="mt-5">
+    <h5 class="fw-bold mb-3 h6 text-uppercase">My Bookings</h5>
+    <div class="bg-white border overflow-hidden">
+        <table class="table table-pro mb-0">
+            <thead>
+                <tr>
+                    <th>Room</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.room.room_type }} - {{ booking.room.hotel.name }}</td>
+                    <td class="small">{{ booking.check_in }}</td>
+                    <td class="small">{{ booking.check_out }}</td>
+                    <td class="small">{{ booking.get_status_display }}</td>
+                    <td class="text-end">
+                        {% if booking.status != 'cancelled' %}
+                        <form method="POST" action="{% url 'cancel_booking' booking.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-0">Cancel</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    let dashLoading = false;
+    let dashNextPage = 2;
+    const dashTrigger = document.getElementById('dash-scroll-trigger');
+    const dashContainer = document.getElementById('dashboard-container');
+    const dashLoadingIndicator = document.getElementById('loading-dash');
+
+    window.onscroll = function() {
+        if (!dashTrigger) return;
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+            loadMoreDash();
+        }
+    };
+
+    async function loadMoreDash() {
+        if (dashLoading || !dashTrigger) return;
+        
+        dashLoading = true;
+        dashLoadingIndicator.classList.remove('d-none');
+        
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', dashNextPage);
+
+        try {
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const html = await response.text();
+            
+            if (html.trim() === "") {
+                dashTrigger.remove();
+            } else {
+                dashContainer.insertAdjacentHTML('beforeend', html);
+                dashNextPage++;
+            }
+        } catch (error) {
+            console.error("Dashboard scroll error:", error);
+        } finally {
+            dashLoading = false;
+            dashLoadingIndicator.classList.add('d-none');
+        }
+    }
+</script>
+{% endblock %}

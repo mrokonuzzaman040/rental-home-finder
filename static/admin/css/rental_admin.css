@@ -1,0 +1,268 @@
+/* Rental Finder - Jazzmin / admin layer on top of flatly + brand */
+:root {
+  --rf-admin-brand: #06311f;
+  --rf-admin-brand-mid: #0d4a2e;
+  --rf-admin-accent: #1a7f4a;
+  --rf-admin-surface: #f4f7f5;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.dashboard .app-content,
+body.change-list .app-content {
+  background: linear-gradient(
+    165deg,
+    var(--rf-admin-surface) 0%,
+    #eef2ef 48%,
+    #e8eeea 100%
+  );
+}
+
+body.dashboard--control-center .app-content .container-fluid {
+  max-width: 1480px;
+}
+
+.rf-dash-lead {
+  max-width: 48rem;
+}
+
+.rf-dash-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rf-admin-brand);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid rgba(6, 49, 31, 0.12);
+}
+
+/* Stat cards on custom index */
+.dashboard-stat-cards .stat-card {
+  border-radius: 12px;
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.dashboard-stat-cards .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(6, 49, 31, 0.12) !important;
+}
+
+.dashboard-stat-cards .stat-card .card-body {
+  position: relative;
+  padding: 1.15rem 1.15rem 1rem;
+}
+
+.dashboard-stat-cards .stat-card__icon {
+  position: absolute;
+  top: 0.85rem;
+  right: 1rem;
+  font-size: 1.65rem;
+  opacity: 0.22;
+  color: var(--rf-admin-brand);
+}
+
+.dashboard-stat-cards .stat-card__value {
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--rf-admin-brand);
+  letter-spacing: -0.02em;
+}
+
+.dashboard-stat-cards .stat-card__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5a6860;
+  margin-top: 0.35rem;
+}
+
+.dashboard-stat-cards .stat-card--accent .stat-card__value {
+  color: var(--rf-admin-accent);
+}
+
+.dashboard-stat-cards .stat-card--muted .stat-card__value {
+  color: #4a554e;
+}
+
+.dashboard-stat-cards .stat-card--alert .stat-card__value {
+  color: #b45309;
+}
+
+.dashboard-stat-cards .stat-card--alert .stat-card__icon {
+  color: #b45309;
+  opacity: 0.28;
+}
+
+/* Charts */
+.rf-chart-card .card-body {
+  min-height: 220px;
+  position: relative;
+}
+
+.rf-chart-card .card-header {
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.rf-chart-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Quick actions */
+.rf-quick-action {
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(6, 49, 31, 0.06);
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.rf-quick-action:hover {
+  box-shadow: 0 6px 16px rgba(6, 49, 31, 0.1);
+}
+
+.rf-quick-actions .btn-outline-success:hover,
+.rf-quick-actions .btn-outline-warning:hover,
+.rf-quick-actions .btn-outline-primary:hover {
+  transform: translateY(-1px);
+}
+
+/* Live tables */
+.rf-table-tight td,
+.rf-table-tight th {
+  padding: 0.45rem 0.65rem;
+  vertical-align: middle;
+}
+
+.rf-table-tight thead th {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Listing / inquiry badges */
+.rf-badge {
+  display: inline-block;
+  padding: 0.22em 0.58em;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.rf-badge--avail {
+  background: #d4edda;
+  color: #155724;
+}
+
+.rf-badge--rented {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.rf-badge--pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.rf-badge--tenant-b {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.rf-badge--tenant-f {
+  background: #e7d4f5;
+  color: #5b2c87;
+}
+
+.rf-badge--tenant-a {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.rf-points-pos {
+  color: #155724;
+  font-weight: 600;
+}
+
+.rf-points-neg {
+  color: #721c24;
+  font-weight: 600;
+}
+
+/* Changelist polish */
+#changelist table tbody tr:hover {
+  background-color: rgba(6, 49, 31, 0.04);
+}
+
+/* Sidebar brand strip consistency */
+.main-sidebar .brand-link {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Login page: keep the wide HouseFinderBD wordmark responsive. */
+body.login-page {
+  min-height: 100vh;
+  padding: 1rem;
+  overflow-x: hidden;
+}
+
+body.login-page .login-box {
+  width: min(420px, calc(100vw - 2rem));
+  margin: 0 auto;
+}
+
+body.login-page .login-logo {
+  margin-bottom: 0.85rem;
+  text-align: center;
+}
+
+body.login-page .login-logo img {
+  display: block;
+  width: min(100%, 380px);
+  max-width: calc(100vw - 2.5rem);
+  height: auto;
+  max-height: 98px;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+body.login-page .card {
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(6, 49, 31, 0.14);
+  overflow: hidden;
+}
+
+body.login-page .login-card-body {
+  padding: 1.5rem;
+}
+
+body.login-page .login-box-msg {
+  line-height: 1.45;
+  padding: 0 0 1rem;
+}
+
+@media (max-width: 480px) {
+  body.login-page {
+    align-items: flex-start;
+    padding-top: 1.5rem;
+  }
+
+  body.login-page .login-logo img {
+    width: min(100%, 320px);
+    max-height: 82px;
+  }
+
+  body.login-page .login-card-body {
+    padding: 1.2rem;
+  }
+}

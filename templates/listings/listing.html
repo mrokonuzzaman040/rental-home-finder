@@ -1,0 +1,426 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} - {{ listing.title }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card card-classic mb-3">
+            {% if listing.main_image %}
+                <img src="{{ listing.main_image.url }}" class="img-fluid" id="main-display-image" alt="{{ listing.title }}" style="width: 100%; height: 350px; object-fit: cover;">
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="img-fluid" id="main-display-image" alt="Property" style="width: 100%; height: 350px; object-fit: cover;">
+            {% endif %}
+        </div>
+
+        {% if listing.images.all %}
+            <div class="row g-2 mb-3">
+                <div class="col-3">
+                    <img src="{{ listing.main_image.url }}" class="img-fluid border gallery-thumb active-thumb" style="height: 60px; width: 100%; object-fit: cover; cursor: pointer;" onclick="changeImage(this.src)">
+                </div>
+                {% for img in listing.images.all %}
+                    <div class="col-3">
+                        <img src="{{ img.image.url }}" class="img-fluid border gallery-thumb" style="height: 60px; width: 100%; object-fit: cover; cursor: pointer;" onclick="changeImage(this.src)">
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <script>
+                function changeImage(src) {
+                    document.getElementById('main-display-image').src = src;
+                    // Reset all thumbs opacity
+                    document.querySelectorAll('.gallery-thumb').forEach(el => el.style.opacity = '0.6');
+                    // Find the one clicked
+                    event.target.style.opacity = '1';
+                }
+                // Initial style
+                document.querySelector('.gallery-thumb').style.opacity = '1';
+            </script>
+        {% endif %}
+        
+        <div class="bg-white p-3 border mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 class="h4 mb-1">{{ listing.title }}</h2>
+                    <p class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>{{ listing.address }}, {{ listing.city }}</p>
+                    {% if listing.tenant_type == 'bachelor' %}
+                        <span class="badge rounded-0 bg-dark bg-opacity-10 text-dark border small">Best for bachelor / shared living</span>
+                    {% elif listing.tenant_type == 'family' %}
+                        <span class="badge rounded-0 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 small">Best for families</span>
+                    {% else %}
+                        <span class="badge rounded-0 bg-secondary bg-opacity-10 text-secondary border small">{{ listing.get_tenant_type_display }}</span>
+                    {% endif %}
+                    <span class="badge rounded-0 bg-{{ trust_color }} bg-opacity-10 text-{{ trust_color }} border border-{{ trust_color }} border-opacity-25 small">
+                        <i class="bi bi-patch-check-fill me-1"></i>Trust {{ listing.trust_score }}/100 - {{ trust_label_text }}
+                    </span>
+                    {% if listing.tenant_fit_note %}
+                        <p class="small text-muted mt-2 mb-0">{{ listing.tenant_fit_note }}</p>
+                    {% endif %}
+                </div>
+                {% if user.is_authenticated %}
+                    <form action="{% url 'toggle_favorite' listing.id %}" method="POST" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm {% if is_favorited %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-0">
+                            <i class="bi {% if is_favorited %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
+                            {% if is_favorited %}Saved{% else %}Save{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+            <hr class="my-3">
+            
+            <div class="row g-0 text-center mb-4">
+                <div class="col-3 border-end">
+                    <span class="d-block small text-muted">Beds</span>
+                    <span class="fw-bold">{{ listing.bedrooms }}</span>
+                </div>
+                <div class="col-3 border-end">
+                    <span class="d-block small text-muted">Baths</span>
+                    <span class="fw-bold">{{ listing.bathrooms }}</span>
+                </div>
+                <div class="col-3 border-end">
+                    <span class="d-block small text-muted">Garage</span>
+                    <span class="fw-bold">{{ listing.garage }}</span>
+                </div>
+                <div class="col-3">
+                    <span class="d-block small text-muted">Sq Ft</span>
+                    <span class="fw-bold">{{ listing.square_feet }}</span>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h6 class="fw-bold small text-uppercase mb-3">Amenities</h6>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="small {% if listing.has_ac %}text-dark{% else %}text-muted text-decoration-line-through{% endif %}">
+                            <i class="bi bi-check-circle me-1"></i>Air Conditioning
+                        </span>
+                        <span class="small {% if listing.has_heating %}text-dark{% else %}text-muted text-decoration-line-through{% endif %}">
+                            <i class="bi bi-check-circle me-1"></i>Heating
+                        </span>
+                        <span class="small {% if listing.is_furnished %}text-dark{% else %}text-muted text-decoration-line-through{% endif %}">
+                            <i class="bi bi-check-circle me-1"></i>Furnished
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <h6 class="fw-bold small text-uppercase">Description</h6>
+            <p class="small text-muted mb-4">{{ listing.description }}</p>
+
+            <!-- Creative AI Insider Report -->
+            <div class="bg-success bg-opacity-10 p-4 border border-success border-opacity-25 mb-4 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 m-2 opacity-10">
+                    <i class="bi bi-robot display-1"></i>
+                </div>
+                <h6 class="fw-bold small text-uppercase text-success mb-3"><i class="bi bi-stars me-2"></i>AI Neighborhood Insider</h6>
+                <div id="ai-insight-content" class="small text-dark lh-lg ai-rendered-content">
+                    {{ ai_insight }}
+                </div>
+                <p class="x-small text-muted mt-3 mb-0 fst-italic">Note: This report is generated by AI based on local knowledge and market trends.</p>
+            </div>
+
+            <h6 class="fw-bold small text-uppercase">Location Map</h6>
+            <div class="border mb-4">
+                <iframe 
+                    width="100%" 
+                    height="250" 
+                    frameborder="0" 
+                    scrolling="no" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    src="https://maps.google.com/maps?q={{ listing.address|urlencode }},{{ listing.city|urlencode }}&t=&z=15&ie=UTF8&iwloc=&output=embed">
+                </iframe>
+            </div>
+
+            <h6 class="fw-bold small text-uppercase mb-3">Property Reviews ({{ reviews.count }})</h6>
+            {% if reviews %}
+                <div class="mb-4">
+                    {% for review in reviews %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold small">{{ review.user.username }}</span>
+                                <span class="text-warning small">
+                                    {% for i in "12345" %}
+                                        <i class="bi {% if forloop.counter <= review.rating %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            <span class="text-muted x-small d-block mb-2">{{ review.created_at|date:"M d, Y" }}</span>
+                            <p class="small text-muted mb-0">{{ review.comment }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="small text-muted mb-4">No reviews yet for this property.</p>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+                <div class="bg-light p-3 border">
+                    <h6 class="fw-bold small text-uppercase mb-3">Leave a Review</h6>
+                    <form action="{% url 'add_review' listing.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Rating</label>
+                            <select name="rating" class="form-select form-select-sm rounded-0 w-25" required>
+                                <option value="5">5 - Excellent</option>
+                                <option value="4">4 - Good</option>
+                                <option value="3">3 - Average</option>
+                                <option value="2">2 - Poor</option>
+                                <option value="1">1 - Terrible</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Comment</label>
+                            <textarea name="comment" class="form-control form-control-sm rounded-0" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-classic">Submit Review</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="bg-light p-3 border text-center">
+                    <p class="small text-muted mb-0"><a href="{% url 'login' %}" class="text-dark fw-bold">Login</a> to leave a review.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="bg-white p-3 border">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small">Monthly Rent</span>
+                <div class="text-end">
+                    {% if offer_discounted_price and primary_offer %}
+                    <span class="h4 m-0 fw-bold text-success d-block">৳{{ offer_discounted_price }}</span>
+                    <span class="small text-muted text-decoration-line-through">৳{{ listing.price }}</span>
+                    <span class="x-small fw-bold text-success d-block">{{ primary_offer.discount_percent }}% off - {{ primary_offer.title }}</span>
+                    {% else %}
+                    <span class="h4 m-0 fw-bold text-success d-block">৳{{ listing.price }}</span>
+                    {% endif %}
+                    <span class="x-small fw-bold {{ price_color }} d-block mt-1">{{ price_status }}</span>
+                    {% if fairness.comparable_count %}
+                        <span class="x-small text-muted d-block">Prototype estimate - based on {{ fairness.comparable_count }} similar listings, not an official rent index.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if listing_offers %}
+            <div class="p-3 mb-3 border border-success border-opacity-25 bg-success bg-opacity-10">
+                <h6 class="small fw-bold text-uppercase mb-2" style="color: var(--deep-green, #06311f);"><i class="bi bi-tag-fill me-1"></i>Active offers</h6>
+                {% for off in listing_offers %}
+                <div class="small {% if not forloop.last %}border-bottom pb-3 mb-3{% endif %}">
+                    <strong>{{ off.title }}</strong>
+                    {% if off.description %}<p class="mb-2 text-muted mt-1">{{ off.description|truncatewords:28 }}</p>{% endif %}
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if off.discount_percent %}<span class="badge bg-white border rounded-0 text-success">{{ off.discount_percent }}% off rent</span>{% endif %}
+                        {% if off.bonus_points_on_inquiry and user.is_authenticated %}
+                        <span class="badge bg-dark rounded-0">+{{ off.bonus_points_on_inquiry }} bonus pts on inquiry</span>
+                        {% elif off.bonus_points_on_inquiry %}
+                        <span class="badge bg-secondary rounded-0">+{{ off.bonus_points_on_inquiry }} bonus pts when logged in</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="small p-2 bg-light border-start border-3 border-dark mb-3 d-flex justify-content-between align-items-center">
+                <span>Inquiry for this listing</span>
+                <a href="{% url 'add_to_compare' listing.id %}" class="small text-dark text-decoration-none fw-bold"><i class="bi bi-arrow-left-right me-1"></i>Compare</a>
+            </div>
+
+            {% if user.is_authenticated %}
+            <form action="{% url 'contact' %}" method="POST" class="inquiry-form-fields">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ user.id }}">
+                <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                <input type="hidden" name="listing_title" value="{{ listing.title }}">
+                
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="inq-name">Full name</label>
+                    <input type="text" name="name" id="inq-name" class="form-control form-control-sm" placeholder="Your name" required autocomplete="name">
+                </div>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="inq-email">Email</label>
+                    <input type="email" name="email" id="inq-email" class="form-control form-control-sm" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="inq-phone">Phone</label>
+                    <input type="text" name="phone" id="inq-phone" class="form-control form-control-sm" placeholder="+880 …" required autocomplete="tel">
+                </div>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="inq-msg">Message</label>
+                    <textarea name="message" id="inq-msg" class="form-control form-control-sm" rows="3" placeholder="I'm interested in this property…"></textarea>
+                </div>
+                <button type="submit" class="btn btn-classic w-100 mb-2"><i class="bi bi-send-fill me-2"></i>Send inquiry</button>
+                <a href="https://wa.me/8801700000000?text=I'm interested in {{ listing.title }}" class="btn btn-outline-success w-100 rounded-0 btn-sm py-2">
+                    <i class="bi bi-whatsapp me-2"></i>Contact via WhatsApp
+                </a>
+            </form>
+            {% else %}
+            <form id="inquiry-preview-form" class="inquiry-form-fields">
+                <input type="hidden" name="listing_id" value="{{ listing.id }}">
+                <p class="small text-muted mb-3 pb-2 border-bottom">Preview your inquiry - after you sign in, you can send it to the landlord.</p>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="guest-inquiry-name">Full name</label>
+                    <input type="text" name="name" id="guest-inquiry-name" class="form-control form-control-sm" placeholder="Your name" autocomplete="name">
+                </div>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="guest-inquiry-email">Email</label>
+                    <input type="email" name="email" id="guest-inquiry-email" class="form-control form-control-sm" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="guest-inquiry-phone">Phone</label>
+                    <input type="text" name="phone" id="guest-inquiry-phone" class="form-control form-control-sm" placeholder="+880 …" autocomplete="tel">
+                </div>
+                <div class="mb-3">
+                    <label class="inquiry-field-label" for="guest-inquiry-msg">Message</label>
+                    <textarea name="message" id="guest-inquiry-msg" class="form-control form-control-sm" rows="3" placeholder="I'm interested in this property…"></textarea>
+                </div>
+                <button type="button" class="btn btn-classic w-100 mb-2" data-bs-toggle="modal" data-bs-target="#inquiryAuthModal">
+                    <i class="bi bi-send-fill me-2"></i>Send inquiry
+                </button>
+                <button type="button" class="btn btn-outline-secondary w-100 rounded-0 btn-sm py-2" disabled aria-disabled="true" title="Register or log in to use WhatsApp">
+                    <i class="bi bi-whatsapp me-2"></i>Contact via WhatsApp
+                </button>
+                <p class="small text-muted mb-0 mt-3 text-center lh-sm">WhatsApp requires an account - <a href="{% url 'register' %}">register</a> or <a href="{% url 'login' %}">log in</a>.</p>
+            </form>
+
+            <div class="modal fade" id="inquiryAuthModal" tabindex="-1" aria-labelledby="inquiryAuthModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-auth-dialog">
+                    <div class="modal-content modal-auth-content">
+                        <div class="auth-brand-bar"></div>
+                        <div class="modal-auth-header position-relative pb-0">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <div class="modal-auth-icon rounded-circle">
+                                <i class="bi bi-envelope-paper-heart" aria-hidden="true"></i>
+                            </div>
+                            <h5 class="auth-panel-title mb-2" id="inquiryAuthModalLabel">Continue to inquire</h5>
+                            <p class="auth-panel-sub mb-0 px-1">Sign in or create an account to submit your message for <span class="text-dark fw-semibold">{{ listing.title|truncatechars:42 }}</span>.</p>
+                        </div>
+                        <div class="modal-body pt-3 px-3 pb-0">
+                            <ul class="nav nav-pills auth-tab-pills mb-0 nav-fill" id="inquiryAuthTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="inquiry-login-tab" data-bs-toggle="tab" data-bs-target="#inquiry-login-pane" type="button" role="tab" aria-controls="inquiry-login-pane" aria-selected="true">Log in</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="inquiry-register-tab" data-bs-toggle="tab" data-bs-target="#inquiry-register-pane" type="button" role="tab" aria-controls="inquiry-register-pane" aria-selected="false">Register</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="inquiryAuthTabContent">
+                                <div class="tab-pane fade show active auth-tab-pane-wrap" id="inquiry-login-pane" role="tabpanel" aria-labelledby="inquiry-login-tab" tabindex="0">
+                                    <form method="post" action="{% url 'login' %}" class="auth-panel-body p-0 bg-transparent">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                        {{ login_form|crispy }}
+                                        <button type="submit" class="btn btn-classic w-100 mt-1">
+                                            <i class="bi bi-box-arrow-in-right me-2"></i>Log in &amp; continue
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="tab-pane fade auth-tab-pane-wrap" id="inquiry-register-pane" role="tabpanel" aria-labelledby="inquiry-register-tab" tabindex="0">
+                                    <form method="post" action="{% url 'register' %}" class="auth-panel-body p-0 bg-transparent">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                        {{ register_form|crispy }}
+                                        <button type="submit" class="btn btn-classic w-100 mt-1">
+                                            <i class="bi bi-person-plus me-2"></i>Create account &amp; continue
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <p class="modal-auth-footer-note">
+                                Prefer the full page?
+                                <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Login</a>
+                                ·
+                                <a href="{% url 'register' %}?next={{ request.path|urlencode }}">Register</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mt-4 pt-3 border-top">
+                <h6 class="fw-bold small text-uppercase text-muted mb-3">Expected Living Cost (AI)</h6>
+                <div id="living-cost-content" class="bg-light p-3 border border-dashed text-dark small lh-base ai-rendered-content">
+                    {{ living_cost }}
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Render AI Insight
+                    const insightEl = document.getElementById('ai-insight-content');
+                    if(insightEl && typeof marked !== 'undefined') {
+                        insightEl.innerHTML = marked.parse(insightEl.innerHTML.trim());
+                    }
+
+                    // Render Living Cost
+                    const costEl = document.getElementById('living-cost-content');
+                    if(costEl && typeof marked !== 'undefined') {
+                        costEl.innerHTML = marked.parse(costEl.innerHTML.trim());
+                    }
+                });
+            </script>
+
+            <style>
+                .ai-rendered-content ul { padding-left: 1.2rem; margin-bottom: 0.5rem; }
+                .ai-rendered-content p { margin-bottom: 0.5rem; }
+                .ai-rendered-content strong { color: var(--deep-green); }
+                .ai-rendered-content { font-size: 0.8rem; }
+            </style>
+            
+            <div class="mt-3 text-center border-top pt-2">
+                <p class="small text-muted mb-0">Listed by: <strong>{{ listing.owner.username }}</strong></p>
+                <button type="button" class="btn btn-sm btn-link text-muted" data-bs-toggle="modal" data-bs-target="#reportListingModal">
+                    <i class="bi bi-flag me-1"></i>Report this listing
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportListingModal" tabindex="-1" aria-labelledby="reportListingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-0">
+            <div class="modal-header">
+                <h5 class="modal-title h6 fw-bold" id="reportListingModalLabel">Report this listing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'submit_complaint' listing.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small">Reason</label>
+                        <select name="category" class="form-select form-select-sm rounded-0">
+                            <option value="fake">Fake / misleading listing</option>
+                            <option value="fraud">Fraud / scam</option>
+                            <option value="wrong_info">Incorrect information</option>
+                            <option value="offensive">Offensive content</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    {% if not user.is_authenticated %}
+                        <div class="mb-3">
+                            <label class="form-label small">Your name</label>
+                            <input type="text" name="reporter_name" class="form-control form-control-sm rounded-0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Your email</label>
+                            <input type="email" name="reporter_email" class="form-control form-control-sm rounded-0">
+                        </div>
+                    {% endif %}
+                    <div class="mb-1">
+                        <label class="form-label small">What's wrong?</label>
+                        <textarea name="message" class="form-control form-control-sm rounded-0" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-0" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-classic">Submit report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

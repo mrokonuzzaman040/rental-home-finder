@@ -1,0 +1,125 @@
+{% if show_location_modal %}
+<script>
+(function () {
+    function getCookie(name) {
+        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? decodeURIComponent(v.pop()) : '';
+    }
+
+    function getCsrf() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input && input.value) return input.value;
+        return getCookie('csrftoken');
+    }
+
+    function init() {
+        const modalEl = document.getElementById('rfLocationModal');
+        if (!modalEl || typeof bootstrap === 'undefined') {
+            console.warn('RentalFinder: location modal or Bootstrap not available');
+            return;
+        }
+
+        const prefsUrl = '{% url "api_visitor_preferences" %}';
+        const resolveUrl = '{% url "api_resolve_location" %}';
+
+        function postJson(url, body) {
+            const token = getCsrf();
+            return fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'X-CSRFToken': token } : {}),
+                },
+                body: JSON.stringify(body),
+            });
+        }
+
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        const geoBtn = document.getElementById('rfUseMyLocation');
+        if (geoBtn) {
+            geoBtn.addEventListener('click', function () {
+                const status = document.getElementById('rfGeoStatus');
+                status.classList.remove('d-none');
+                status.textContent = 'Locating…';
+
+                if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                    status.textContent = 'Geolocation needs HTTPS on this host. Pick a city from the list.';
+                    return;
+                }
+
+                if (!navigator.geolocation) {
+                    status.textContent = 'Location not supported in this browser.';
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    async function (pos) {
+                        try {
+                            const res = await postJson(resolveUrl, {
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude,
+                            });
+                            const data = await res.json();
+                            if (data.city) {
+                                const sel = document.getElementById('rfModalCity');
+                                let hit = false;
+                                for (let i = 0; i < sel.options.length; i++) {
+                                    if (sel.options[i].value.toLowerCase() === data.city.toLowerCase()) {
+                                        sel.selectedIndex = i;
+                                        hit = true;
+                                        break;
+                                    }
+                                }
+                                if (!hit) {
+                                    const opt = document.createElement('option');
+                                    opt.value = data.city;
+                                    opt.textContent = data.city;
+                                    sel.appendChild(opt);
+                                    sel.value = data.city;
+                                }
+                                status.textContent = 'Matched near: ' + data.city;
+                            } else {
+                                status.textContent = 'Could not determine city - pick from the list.';
+                            }
+                        } catch (e) {
+                            status.textContent = 'Could not resolve location.';
+                        }
+                    },
+                    function (err) {
+                        var msg = 'Could not read location.';
+                        if (err && err.code === 1) msg = 'Permission denied - allow location for this site in your browser settings.';
+                        else if (err && err.code === 2) msg = 'Position unavailable.';
+                        else if (err && err.code === 3) msg = 'Location request timed out.';
+                        status.textContent = msg;
+                    },
+                    { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 }
+                );
+            });
+        }
+
+        document.getElementById('rfSavePreferences').addEventListener('click', async function () {
+            const city = (document.getElementById('rfModalCity').value || '').trim();
+            const tenantEl = document.querySelector('input[name="rfTenant"]:checked');
+            const tenant = tenantEl ? tenantEl.value : '';
+            await postJson(prefsUrl, { city: city, tenant: tenant });
+            modal.hide();
+            window.location.reload();
+        });
+
+        document.getElementById('rfSkipPreferences').addEventListener('click', async function () {
+            await postJson(prefsUrl, { skip: true });
+            modal.hide();
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+{% endif %}

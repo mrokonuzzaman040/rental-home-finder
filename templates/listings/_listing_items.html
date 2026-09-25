@@ -1,0 +1,27 @@
+{% for listing in listings %}
+    <div class="col-md-6 col-xl-4 listing-item">
+        <div class="card card-classic h-100">
+            {% if listing.main_image %}
+                <img src="{{ listing.main_image.url }}" class="card-img-top" alt="{{ listing.title }}">
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="card-img-top" alt="Property">
+            {% endif %}
+            <div class="card-body">
+                <h3 class="card-title text-truncate" title="{{ listing.title }}">{{ listing.title }}</h3>
+                <p class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>{{ listing.city }}</p>
+                {% if listing.tenant_type == 'bachelor' %}
+                    <p class="small mb-2"><span class="badge rounded-0 bg-light text-dark border">Bachelor</span></p>
+                {% elif listing.tenant_type == 'family' %}
+                    <p class="small mb-2"><span class="badge rounded-0 bg-primary-subtle text-primary border border-primary border-opacity-25">Family</span></p>
+                {% elif listing.tenant_type == 'girl' %}
+                    <p class="small mb-2"><span class="badge rounded-0 bg-success-subtle text-success border border-success border-opacity-25">Girl</span></p>
+                {% endif %}
+                {% if listing.trust_score >= 50 %}
+                    <p class="small mb-2"><span class="badge rounded-0 bg-dark text-white"><i class="bi bi-patch-check-fill me-1"></i>Trust {{ listing.trust_score }}/100</span></p>
+                {% endif %}
+                <div class="price-tag mb-3">৳{{ listing.price }} <small class="text-muted fw-normal">/ mo</small></div>
+                <a href="{% url 'listing' listing.id %}" class="btn btn-classic w-100">Details</a>
+            </div>
+        </div>
+    </div>
+{% endfor %}

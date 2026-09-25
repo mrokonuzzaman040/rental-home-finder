@@ -1,0 +1,1 @@
+web: gunicorn config.wsgi:application --workers 3 --threads 8 --timeout 120 --access-logfile -

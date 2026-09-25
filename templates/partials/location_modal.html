@@ -1,0 +1,49 @@
+{# First visit: set preferred area + bachelor/family - drives browse ordering. #}
+{# JS lives in location_modal_scripts.html (must run after bootstrap.bundle.min.js). #}
+{% if show_location_modal %}
+<div class="modal fade" id="rfLocationModal" tabindex="-1" aria-labelledby="rfLocationModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-0 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h2 class="modal-title h5 fw-bold" id="rfLocationModalLabel">
+                    <i class="bi bi-geo-alt-fill text-success me-2"></i>Where are you looking?
+                </h2>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="text-muted small mb-3">We’ll show rentals in your area first. You can change this anytime from the home page.</p>
+
+                <label class="small fw-semibold text-uppercase text-muted mb-1">City or area</label>
+                <div class="input-group input-group-sm mb-2">
+                    <select id="rfModalCity" class="form-select form-select-sm rounded-0">
+                        <option value="">Select a city…</option>
+                        {% for c in modal_city_choices %}
+                            <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-0" id="rfUseMyLocation" title="Uses device location (approximate city)">
+                        <i class="bi bi-crosshair"></i>
+                    </button>
+                </div>
+                <p id="rfGeoStatus" class="small text-muted mb-3 d-none"></p>
+
+                <label class="small fw-semibold text-uppercase text-muted mb-2 d-block">You are</label>
+                <div class="btn-group btn-group-sm w-100 mb-3" role="group" aria-label="Tenant type">
+                    <input type="radio" class="btn-check" name="rfTenant" id="rfTenantAny" value="" autocomplete="off" checked>
+                    <label class="btn btn-outline-dark rounded-0" for="rfTenantAny">Any</label>
+                    <input type="radio" class="btn-check" name="rfTenant" id="rfTenantBachelor" value="bachelor" autocomplete="off">
+                    <label class="btn btn-outline-dark rounded-0" for="rfTenantBachelor">Bachelor</label>
+                    <input type="radio" class="btn-check" name="rfTenant" id="rfTenantFamily" value="family" autocomplete="off">
+                    <label class="btn btn-outline-dark rounded-0" for="rfTenantFamily">Family</label>
+                    <input type="radio" class="btn-check" name="rfTenant" id="rfTenantGirl" value="girl" autocomplete="off">
+                    <label class="btn btn-outline-dark rounded-0" for="rfTenantGirl">Girl</label>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-classic btn-sm py-2" id="rfSavePreferences">Save &amp; continue</button>
+                    <button type="button" class="btn btn-link btn-sm text-muted text-decoration-none" id="rfSkipPreferences">Skip for now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

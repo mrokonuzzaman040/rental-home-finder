@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %} - {{ hotel.name }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="card card-classic mb-3">
+            {% if hotel.main_image %}
+                <img src="{{ hotel.main_image.url }}" class="img-fluid" alt="{{ hotel.name }}" style="width: 100%; height: 300px; object-fit: cover;">
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" class="img-fluid" alt="Hotel" style="width: 100%; height: 300px; object-fit: cover;">
+            {% endif %}
+        </div>
+        <div class="bg-white p-3 border mb-3">
+            <h2 class="h4 mb-1">{{ hotel.name }}</h2>
+            <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{ hotel.address }}, {{ hotel.city }}</p>
+            {% if hotel.is_verified %}
+                <span class="badge rounded-0 bg-success-subtle text-success border border-success border-opacity-25 small">Verified</span>
+            {% endif %}
+            <p class="mt-2 mb-0">{{ hotel.description }}</p>
+        </div>
+
+        <h3 class="h6 fw-bold text-uppercase mb-3">Rooms</h3>
+        <div class="row g-3">
+            {% for room in rooms %}
+            <div class="col-md-6">
+                <div class="card card-classic h-100">
+                    {% if room.main_image %}
+                        <img src="{{ room.main_image.url }}" class="card-img-top" style="height: 140px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h4 class="h6 mb-1">{{ room.room_type }}</h4>
+                        <p class="small text-muted mb-2">Capacity: {{ room.capacity }} guests · {{ room.total_rooms }} rooms available</p>
+                        <div class="price-tag mb-2">৳{{ room.price_per_night }} <small class="text-muted fw-normal">/ night</small></div>
+                        {% if user.is_authenticated %}
+                        <form method="POST" action="{% url 'book_room' room.id %}" class="row g-2">
+                            {% csrf_token %}
+                            <div class="col-6"><input type="date" name="check_in" class="form-control form-control-sm rounded-0" required></div>
+                            <div class="col-6"><input type="date" name="check_out" class="form-control form-control-sm rounded-0" required></div>
+                            <div class="col-6"><input type="number" name="guests" class="form-control form-control-sm rounded-0" value="1" min="1"></div>
+                            <div class="col-6"><button type="submit" class="btn btn-classic btn-sm w-100">Book</button></div>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path|urlencode }}" class="btn btn-classic btn-sm w-100">Log in to book</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12"><p class="text-muted small">No rooms published yet.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="bg-white p-3 border">
+            <p class="small text-muted mb-0">Managed by: <strong>{{ hotel.manager.username }}</strong></p>
+            {% if hotel.contact_phone %}
+                <p class="small text-muted mb-0">Contact: {{ hotel.contact_phone }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

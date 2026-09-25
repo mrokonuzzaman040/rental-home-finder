@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %} - Messages{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="h4 mb-4 fw-bold">Inquiries & Messages</h2>
+        <div class="bg-white border">
+            <table class="table table-pro mb-0">
+                <thead>
+                    <tr>
+                        <th>Sender Info</th>
+                        <th>Property</th>
+                        <th>Date Received</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if inquiries %}
+                        {% for inquiry in inquiries %}
+                            <tr>
+                                <td>
+                                    <span class="d-block fw-bold">{{ inquiry.name }}</span>
+                                    <span class="text-muted x-small d-block">{{ inquiry.email }}</span>
+                                    <span class="text-muted x-small d-block">{{ inquiry.phone }}</span>
+                                </td>
+                                <td><span class="small">{{ inquiry.listing.title }}</span></td>
+                                <td class="small">{{ inquiry.contact_date|date:"M d, Y" }}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-dark rounded-0 px-3" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ inquiry.id }}">Read Message</button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal Reused from Dashboard -->
+                            <div class="modal fade" id="inquiryModal{{ inquiry.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-0 border-0 shadow-lg">
+                                        <div class="modal-header border-bottom-0 pb-0">
+                                            <h5 class="modal-title fw-bold">Message Details</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body p-4">
+                                            <div class="mb-4">
+                                                <label class="x-small text-uppercase text-muted d-block mb-1">From</label>
+                                                <h6 class="fw-bold mb-0">{{ inquiry.name }}</h6>
+                                                <p class="mb-0 small text-muted">{{ inquiry.email }} | {{ inquiry.phone }}</p>
+                                            </div>
+                                            <div class="bg-light p-3 border">
+                                                <label class="x-small text-uppercase text-muted d-block mb-2">Message</label>
+                                                <p class="small mb-0 text-dark">{{ inquiry.message }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 pt-0">
+                                            <a href="mailto:{{ inquiry.email }}" class="btn btn-classic w-100">Reply via Email</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <i class="bi bi-chat-left-dots display-4 text-muted mb-3 d-block"></i>
+                                <p class="text-muted small">No inquiries received yet.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

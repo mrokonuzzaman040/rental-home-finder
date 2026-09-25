@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %} - Rewards{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h2 class="h4 fw-bold mb-1">Rewards &amp; points</h2>
+    <p class="text-muted small mb-0">Earn points for activity; redeem options may expand over time.</p>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="bg-white border p-4 shadow-sm h-100">
+            <span class="text-muted small text-uppercase fw-bold d-block mb-2">Balance</span>
+            <span class="display-6 fw-bold text-success">{{ summary.balance }}</span>
+            <span class="text-muted small">points available</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-white border p-4 shadow-sm h-100">
+            <span class="text-muted small text-uppercase fw-bold d-block mb-2">Lifetime earned</span>
+            <span class="display-6 fw-bold">{{ summary.lifetime_points }}</span>
+            <span class="text-muted small">total points granted</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-white border p-4 shadow-sm h-100">
+            <span class="text-muted small text-uppercase fw-bold d-block mb-2">Your tier</span>
+            <span class="h2 fw-bold text-capitalize">{% if summary.tier == 'gold' %}<i class="bi bi-award text-warning me-1"></i>{% elif summary.tier == 'silver' %}<i class="bi bi-award text-secondary me-1"></i>{% else %}<i class="bi bi-award me-1"></i>{% endif %}{{ summary.tier_label }}</span>
+            <p class="small text-muted mb-0 mt-2">{{ tier_progress.hint }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <h3 class="h6 text-uppercase text-muted fw-bold mb-3">Progress to next tier</h3>
+    <div class="bg-white border p-3">
+        {% if tier_progress.at_max %}
+        <p class="small mb-0 text-success"><i class="bi bi-check-circle me-1"></i>{{ tier_progress.hint }}</p>
+        {% else %}
+        <div class="d-flex justify-content-between small mb-1">
+            <span>Next: <strong>{{ tier_progress.next_label }}</strong></span>
+            <span class="text-muted">{{ tier_progress.points_to_next }} pts to go</span>
+        </div>
+        <div class="progress rounded-0" style="height: 8px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ tier_progress.progress_pct }}%;" aria-valuenow="{{ tier_progress.progress_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <h3 class="h6 text-uppercase text-muted fw-bold mb-3">Ways to earn</h3>
+        <div class="bg-white border">
+            <ul class="list-group list-group-flush">
+                {% for row in earn_rows %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="small">{{ row.action }}</span>
+                    <span class="badge bg-light text-dark border rounded-0">+{{ row.points }} pts</span>
+                </li>
+                {% endfor %}
+                <li class="list-group-item d-flex justify-content-between align-items-center small text-muted">
+                    <span>Active listing offers (varies)</span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-0">Promo</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <h3 class="h6 text-uppercase text-muted fw-bold mb-3">Recent activity</h3>
+        <div class="bg-white border">
+            <div class="table-responsive">
+                <table class="table table-pro mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Points</th>
+                            <th>Reason</th>
+                            <th>Listing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if ledger %}
+                            {% for row in ledger %}
+                            <tr>
+                                <td class="small">{{ row.created_at|date:"M j, Y H:i" }}</td>
+                                <td class="fw-bold {% if row.points > 0 %}text-success{% else %}text-danger{% endif %}">{{ row.points }}</td>
+                                <td class="small">{{ row.get_reason_display }}</td>
+                                <td class="small text-muted">{% if row.listing %}{{ row.listing.title|truncatechars:28 }}{% else %}-{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted small">No reward activity yet - browse listings and engage to earn points.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

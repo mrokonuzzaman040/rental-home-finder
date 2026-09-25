@@ -1,0 +1,437 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jazzmin %}
+{% get_jazzmin_ui_tweaks as jazzmin_ui %}
+
+{% block bodyclass %}{{ block.super }} dashboard dashboard--control-center{% endblock %}
+
+{% block content_title %}{% trans 'Control center' %}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+        <li class="breadcrumb-item active">{% trans 'Operations' %}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    {% get_side_menu using="app_list" as dashboard_list %}
+    {% if dashboard_list %}
+        {% widthratio dashboard_list|length 2 1 as middle %}
+    {% endif %}
+
+    {# -------- Full-width analytics (super-admin style) -------- #}
+    <div class="col-12">
+        {% if dashboard.stats %}
+        <p class="text-muted small mb-3 rf-dash-lead">
+            {% trans 'Live snapshot of listings, leads, users, rewards, and AI assistant usage.' %}
+        </p>
+
+        <div class="row dashboard-stat-cards g-3 mb-2">
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-card__icon" aria-hidden="true"><i class="fas fa-home"></i></div>
+                        <div class="stat-card__value">{{ dashboard.stats.listings_total }}</div>
+                        <div class="stat-card__label">{% trans 'Listings' %}</div>
+                        <small class="text-muted">{{ dashboard.stats.listings_published }} {% trans 'live' %}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card stat-card stat-card--accent border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-card__icon" aria-hidden="true"><i class="fas fa-envelope"></i></div>
+                        <div class="stat-card__value">{{ dashboard.stats.inquiries_week }}</div>
+                        <div class="stat-card__label">{% trans 'Inquiries (7d)' %}</div>
+                        <small class="text-muted">{{ dashboard.stats.inquiries_total }} {% trans 'all time' %}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-card__icon" aria-hidden="true"><i class="fas fa-users"></i></div>
+                        <div class="stat-card__value">{{ dashboard.stats.users_total }}</div>
+                        <div class="stat-card__label">{% trans 'Users' %}</div>
+                        <small class="text-muted">+{{ dashboard.stats.new_users_week }} {% trans 'new (7d)' %}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-card__icon" aria-hidden="true"><i class="fas fa-star"></i></div>
+                        <div class="stat-card__value">{{ dashboard.stats.reviews_total }}</div>
+                        <div class="stat-card__label">{% trans 'Reviews' %}</div>
+                        <small class="text-muted">{{ dashboard.stats.favorites_total }} {% trans 'favorites' %}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card stat-card stat-card--muted border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-card__icon" aria-hidden="true"><i class="fas fa-robot"></i></div>
+                        <div class="stat-card__value">{{ dashboard.stats.ai_messages_today }}</div>
+                        <div class="stat-card__label">{% trans 'AI msgs today' %}</div>
+                        <small class="text-muted">{{ dashboard.stats.wallets_count }} {% trans 'wallets' %}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card stat-card stat-card--alert border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-card__icon" aria-hidden="true"><i class="fas fa-user-shield"></i></div>
+                        <div class="stat-card__value">{{ dashboard.stats.listings_unverified }}</div>
+                        <div class="stat-card__label">{% trans 'Unverified' %}</div>
+                        <small class="text-muted">{{ dashboard.stats.staff_count }} {% trans 'staff' %} · {{ dashboard.stats.offers_active }} {% trans 'promos' %}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="rf-dash-heading mt-4"><i class="fas fa-chart-area me-2"></i>{% trans 'Trends & mix' %}</h6>
+        <div class="row g-3 mb-3">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm h-100 rf-chart-card">
+                    <div class="card-header bg-white border-bottom py-2">
+                        <strong>{% trans 'Property inquiries' %}</strong>
+                        <span class="text-muted small">{% trans 'Last 30 days (by day)' %}</span>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="rfInquiryChart" height="120" aria-label="{% trans 'Inquiries chart' %}"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100 rf-chart-card">
+                    <div class="card-header bg-white border-bottom py-2">
+                        <strong>{% trans 'Listing status' %}</strong>
+                        <span class="text-muted small">{% trans 'Inventory mix' %}</span>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <canvas id="rfStatusChart" height="200" aria-label="{% trans 'Status chart' %}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rf-chart-card">
+                    <div class="card-header bg-white border-bottom py-2">
+                        <strong>{% trans 'AI assistant volume' %}</strong>
+                        <span class="text-muted small">{% trans 'Messages per day (logged-in users), last 14 days' %}</span>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="rfAiChart" height="70" aria-label="{% trans 'AI usage chart' %}"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{ dashboard.inquiry_chart|json_script:"rf-chart-inquiry" }}
+        {{ dashboard.listing_status_chart|json_script:"rf-chart-status" }}
+        {{ dashboard.ai_usage_chart|json_script:"rf-chart-ai" }}
+
+        <h6 class="rf-dash-heading"><i class="fas fa-bolt me-2"></i>{% trans 'Quick controls' %}</h6>
+        <p class="text-muted small">{% trans 'Jump to filtered admin lists for common moderation tasks.' %}</p>
+        <div class="row g-2 mb-4 rf-quick-actions">
+            {% for action in dashboard.quick_actions %}
+            <div class="col-lg-4 col-md-6">
+                <a href="{{ action.url }}" class="btn btn-{{ action.variant }} w-100 text-start rf-quick-action py-3">
+                    <i class="{{ action.icon }} me-2"></i>
+                    <span class="fw-semibold d-block">{{ action.title }}</span>
+                    <small class="text-muted">{{ action.subtitle }}</small>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12"><p class="text-muted small">{% trans 'Shortcuts unavailable.' %}</p></div>
+            {% endfor %}
+        </div>
+
+        <h6 class="rf-dash-heading"><i class="fas fa-table me-2"></i>{% trans 'Live tables' %}</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header py-2 bg-white"><strong>{% trans 'Latest inquiries' %}</strong></div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-hover mb-0 rf-table-tight">
+                            <thead class="table-light"><tr><th>{% trans 'When' %}</th><th>{% trans 'Lead' %}</th><th>{% trans 'Listing' %}</th></tr></thead>
+                            <tbody>
+                                {% for row in dashboard.recent_inquiries %}
+                                <tr>
+                                    <td class="text-muted small text-nowrap">{{ row.contact_date|date:"M j H:i" }}</td>
+                                    <td><a href="{% url 'admin:listings_inquiry_change' row.pk %}">{{ row.name|truncatechars:18 }}</a></td>
+                                    <td class="small"><a href="{% url 'admin:listings_listing_change' row.listing_id %}">{{ row.listing.title|truncatechars:20 }}</a></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-muted p-3">{% trans 'No inquiries yet.' %}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header py-2 bg-white"><strong>{% trans 'Top listings by views' %}</strong></div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-hover mb-0 rf-table-tight">
+                            <thead class="table-light"><tr><th>#</th><th>{% trans 'Title' %}</th><th>{% trans 'Views' %}</th></tr></thead>
+                            <tbody>
+                                {% for row in dashboard.top_listings %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><a href="{% url 'admin:listings_listing_change' row.pk %}">{{ row.title|truncatechars:28 }}</a></td>
+                                    <td class="text-end">{{ row.views_count }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-muted p-3">{% trans 'No listings.' %}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header py-2 bg-white"><strong>{% trans 'Newest users' %}</strong></div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-hover mb-0 rf-table-tight">
+                            <thead class="table-light"><tr><th>{% trans 'Joined' %}</th><th>{% trans 'User' %}</th><th>{% trans 'Staff' %}</th></tr></thead>
+                            <tbody>
+                                {% for u in dashboard.recent_users %}
+                                <tr>
+                                    <td class="text-muted small text-nowrap">{{ u.date_joined|date:"M j" }}</td>
+                                    <td><a href="{% url 'admin:auth_user_change' u.pk %}">{{ u.username }}</a></td>
+                                    <td>{% if u.is_staff %}<span class="badge bg-success">{% trans 'yes' %}</span>{% else %}-{% endif %}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-muted p-3">{% trans 'No users.' %}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <h6 class="rf-dash-heading"><i class="fas fa-database me-2"></i>{% trans 'Models & registry' %}</h6>
+    </div>
+
+    <div class="col-lg-8 col-12">
+        <div class="row">
+            <div class="col-md-6 col-sm-12">
+                {% for app in dashboard_list %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="m-0">{{ app.name }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tbody>
+                                {% for model in app.models %}
+                                    <tr>
+                                        <td>
+                                            {% if model.url %}<a href="{{ model.url }}">{{ model.name }}</a>{% else %}{{ model.name }}{% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group float-end">
+                                                {% if model.add_url %}
+                                                    <a href="{{ model.add_url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.success }} addlink">{% trans 'Add' %}</a>
+                                                {% endif %}
+                                                {% if model.url %}
+                                                    {% if model.view_only %}
+                                                        <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} viewlink">{% trans 'View' %}</a>
+                                                    {% else %}
+                                                        <a href="{{ model.url }}" class="btn btn-sm {{ jazzmin_ui.button_classes.info }} changelink">{% if model.custom %}{% trans 'Go' %}{% else %}{% trans 'Change' %}{% endif %}</a>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if forloop.counter == middle|add:"0" %}
+                    </div>
+                    <div class="col-md-6 col-sm-12">
+                    {% endif %}
+
+                {% endfor %}
+                </div>
+        </div>
+
+    </div>
+    <div class="col-lg-4 col-12">
+        <div id="content-related">
+            <div class="module" id="recent-actions-module">
+                <h4 class="mb-3">{% trans 'Recent actions' %}</h4>
+                {% load log %}
+                {% get_admin_log 10 as admin_log for_user user %}
+                {% if not admin_log %}
+                    <p>{% trans 'None available' %}</p>
+                {% else %}
+                    <div class="timeline">
+                        {% for entry in admin_log %}
+                            <div>
+                                {% if entry.is_change %}
+                                    <i class="fas fa-edit bg-gray text-xs"></i>
+                                {% elif entry.is_deletion %}
+                                    <i class="fas fa-trash bg-danger text-xs"></i>
+                                {% elif entry.is_addition %}
+                                    <i class="fas fa-plus-circle bg-success text-xs"></i>
+                                {% endif %}
+
+                                <div class="timeline-item">
+                                    <span class="time"><i class="fas fa-clock"></i> {% blocktrans with timesince=entry.action_time|timesince %}{{ timesince }} ago{% endblocktrans %}</span>
+                                    <h3 class="timeline-header no-border">
+                                        {% if entry.is_deletion or not entry.get_admin_url %}
+                                            {{ entry.object_repr }}
+                                        {% else %}
+                                            <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                                        {% endif %}
+
+                                        {% if entry.model %}
+                                            <span class="mini quiet">
+                                                {% filter capfirst %}
+                                                    {{ entry.model }}
+                                                {% endfilter %}
+                                            </span>
+                                        {% endif %}
+                                    </h3>
+                                    {% if not entry.is_deletion %}
+                                        <div class="timeline-body">
+                                            {% if entry.is_addition %}
+                                                {{ entry }}
+                                            {% else %}
+                                                <ul style="list-style: none; padding: 0;">
+                                                    {% action_message_to_list entry as action_message_list %}
+                                                    {% for action_message in action_message_list %}
+                                                        <li>{{ action_message.msg|style_bold_first_word }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <div>
+                            <i class="fa fa-clock bg-gray"></i>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+(function () {
+  function brandRgb() {
+    return { r: 6, g: 49, b: 31 };
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Chart === 'undefined') return;
+    var br = brandRgb();
+    var brand = 'rgba(' + br.r + ',' + br.g + ',' + br.b + ',0.85)';
+    var brandFill = 'rgba(' + br.r + ',' + br.g + ',' + br.b + ',0.12)';
+
+    var inquiryEl = document.getElementById('rf-chart-inquiry');
+    var statusEl = document.getElementById('rf-chart-status');
+    var aiEl = document.getElementById('rf-chart-ai');
+    if (!inquiryEl || !statusEl || !aiEl) return;
+
+    var inquiry = JSON.parse(inquiryEl.textContent);
+    var status = JSON.parse(statusEl.textContent);
+    var ai = JSON.parse(aiEl.textContent);
+
+    var q = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var grid = q ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    var tick = q ? '#adb5bd' : '#6c757d';
+
+    new Chart(document.getElementById('rfInquiryChart'), {
+      type: 'line',
+      data: {
+        labels: inquiry.labels,
+        datasets: [{
+          label: 'Inquiries',
+          data: inquiry.data,
+          borderColor: brand,
+          backgroundColor: brandFill,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: grid }, ticks: { color: tick, maxTicksLimit: 10 } },
+          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0 } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('rfStatusChart'), {
+      type: 'doughnut',
+      data: {
+        labels: status.labels,
+        datasets: [{
+          data: status.data,
+          backgroundColor: (status.colors && status.colors.length) ? status.colors : ['#1a7f4a', '#6c757d', '#ffc107'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: tick, boxWidth: 12 } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('rfAiChart'), {
+      type: 'bar',
+      data: {
+        labels: ai.labels,
+        datasets: [{
+          label: 'AI messages',
+          data: ai.data,
+          backgroundColor: brandFill,
+          borderColor: brand,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: tick, maxTicksLimit: 14 } },
+          y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0 } }
+        }
+      }
+    });
+  });
+})();
+</script>
+{% endblock %}
