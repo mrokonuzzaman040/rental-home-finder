@@ -31,7 +31,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Import seed module after Django is set up
         import importlib.util, pathlib
-        seed_path = pathlib.Path(__file__).resolve().parents[4] / "seed.py"
+        # __file__ is at listings/management/commands/seed_data.py
+        # parents[3] is the project root (BASE_DIR)
+        seed_path = pathlib.Path(__file__).resolve().parents[3] / "seed.py"
         spec = importlib.util.spec_from_file_location("seed", seed_path)
         seed = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(seed)
